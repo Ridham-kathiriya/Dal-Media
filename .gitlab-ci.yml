@@ -1,0 +1,70 @@
+image: node:latest
+
+before_script:
+  - "command -v ssh-agent >/dev/null || ( apt-get update -y && apt-get install openssh-client -y && apt-get intall ruby-dev -y)"
+  - eval $(ssh-agent -s)
+  - gem install dpl --user-install
+
+stages:
+  - staging
+  - production
+
+deploy_frontend_staging:
+  type: deploy
+  stage: staging
+  image: ruby:latest
+  before_script:
+    - cd frontend
+  script:
+    - export PATH=$PATH:/home/gitlab-runner/.gem/ruby/2.5.0/bin
+    - dpl --provider=heroku --app=$HEROKU_FRONTEND_STAGING --api-key=$HEROKU_API_KEY
+  tags:
+    - ugrad
+  only:
+    - staging
+
+deploy_frontend_production:
+  type: deploy
+  stage: production
+  image: ruby:latest
+  before_script:
+    - cd frontend
+  script:
+    - export PATH=$PATH:/home/gitlab-runner/.gem/ruby/2.5.0/bin
+    - dpl --provider=heroku --app=$HEROKU_FRONTEND_PRODUCTION --api-key=$HEROKU_API_KEY
+  tags:
+    - ugrad
+  only:
+    - main
+
+deploy_backend_staging:
+  type: deploy
+  stage: staging
+  image: ruby:latest
+  before_script:
+    - apt-get update -qy
+    - apt-get install -y ruby-dev
+    - gem install dpl
+  script:
+    - cd backend
+    - export PATH=$PATH:/home/gitlab-runner/.gem/ruby/2.5.0/bin
+    # add heroku app
+    - dpl --provider=heroku --app=$HEROKU_BACKEND_STAGING --api-key=$HEROKU_API_KEY
+  only:
+    - staging
+
+deploy_backend_production:
+  type: deploy
+  stage: staging
+  image: ruby:latest
+  before_script:
+    - apt-get update -qy
+    - apt-get install -y ruby-dev
+    - gem install dpl
+  script:
+    - cd backend
+    - export PATH=$PATH:/home/gitlab-runner/.gem/ruby/2.5.0/bin
+    # add heroku app
+    - dpl --provider=heroku --app=$HEROKU_BACKEND_PRODUCTION --api-key=$HEROKU_API_KEY
+  only:
+    - main
